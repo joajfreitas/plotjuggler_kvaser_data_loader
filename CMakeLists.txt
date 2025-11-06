@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.7)
+cmake_minimum_required(VERSION 3.10)
 
 project(plotjuggler_sample_plugins)
 
@@ -9,6 +9,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)
 SET(CMAKE_AUTOUIC ON)
+
+SET(CMAKE_CXX_FLAGS -O3)
 
 find_package(Qt5 REQUIRED COMPONENTS
     Core
@@ -34,74 +36,52 @@ add_definitions( ${QT_DEFINITIONS} -DQT_PLUGIN )
 set( PJ_LIBRARIES ${QT_LIBRARIES} )
 
 #--------------------------------------------------------
-#-------------- Build with CATKIN (ROS1) ----------------
-if( CATKIN_DEVEL_PREFIX OR catkin_FOUND OR CATKIN_BUILD_BINARY_PACKAGE)
 
-    set(COMPILING_WITH_CATKIN 1)
-    message(STATUS "COMPILING_WITH_CATKIN")
-    add_definitions(-DCOMPILED_WITH_CATKIN)
+find_package(plotjuggler REQUIRED)
+message(STATUS "PlotJuggler FOUND")
+message(STATUS "plotjuggler_INCLUDE_DIR: ${plotjuggler_INCLUDE_DIR}")
+message(STATUS "plotjuggler_LIBRARIES: ${plotjuggler_LIBRARIES}")
 
-    find_package(catkin REQUIRED COMPONENTS plotjuggler )
-    catkin_package(
-        CATKIN_DEPENDS plotjuggler
-        )
-    include_directories(${catkin_INCLUDE_DIRS})
-    list(APPEND ${PJ_LIBRARIES} ${catkin_LIBRARIES} )
-    set(PJ_PLUGIN_INSTALL_DIRECTORY ${CATKIN_PACKAGE_BIN_DESTINATION} )
-
-    #--------------------------------------------------------
-    #-------------- Build with AMENT (ROS2) -----------------
-elseif( DEFINED ENV{AMENT_PREFIX_PATH})
-
-    set(COMPILING_WITH_AMENT 1)
-    message(STATUS "COMPILING_WITH_CATKIN")
-    add_definitions(-DCOMPILED_WITH_AMENT)
-
-    find_package(ament_cmake REQUIRED)
-    find_package(plotjuggler REQUIRED)
-    set(PJ_PLUGIN_INSTALL_DIRECTORY lib/${PROJECT_NAME} )
-
-    #--------------------------------------------------------
-    #------------- Build without any ROS support ------------
-else()
-
-    find_package(plotjuggler REQUIRED)
-    message(STATUS "PlotJuggler FOUND")
-    message(STATUS "plotjuggler_INCLUDE_DIR: ${plotjuggler_INCLUDE_DIR}")
-    message(STATUS "plotjuggler_LIBRARIES: ${plotjuggler_LIBRARIES}")
-
-    include_directories(${plotjuggler_INCLUDE_DIR})
-    list(APPEND ${PJ_LIBRARIES} ${plotjuggler_LIBRARIES} )
-    set(PJ_PLUGIN_INSTALL_DIRECTORY bin )
-
-endif()
+include_directories(${plotjuggler_INCLUDE_DIR})
+list(APPEND PJ_LIBRARIES ${plotjuggler_LIBRARIES} )
+set(PJ_PLUGIN_INSTALL_DIRECTORY bin )
 
 #------- Create the libraries -------
 
-add_library(PlotJugglerStreamSample SHARED
-    DataStreamSample/datastream_sample.h
-    DataStreamSample/datastream_sample.cpp )
-
-target_link_libraries(PlotJugglerStreamSample
-    ${PJ_LIBRARIES})
-
-
+# todo: write CMakeLists.txt for fcp-cpp
 add_library(PlotJugglerDataSample SHARED
-   DataLoadSampleCSV/dataload_simple_csv.h
-   DataLoadSampleCSV/dataload_simple_csv.cpp )
+    kvaser_data_load/kvaser_data_load.h
+    kvaser_data_load/kvaser_data_load.cpp
+    fcp-cpp/src/candata.h
+    fcp-cpp/src/fcp_argument.cpp
+    fcp-cpp/src/fcp_argument.hpp
+    fcp-cpp/src/fcp_command.cpp
+    fcp-cpp/src/fcp_command.hpp
+    fcp-cpp/src/fcp_common.hpp
+    fcp-cpp/src/fcp_config.cpp
+    fcp-cpp/src/fcp_config.hpp
+    fcp-cpp/src/fcp.cpp
+    fcp-cpp/src/fcp_device.cpp
+    fcp-cpp/src/fcp_device.hpp
+    fcp-cpp/src/fcp.hpp
+    fcp-cpp/src/fcp_log.cpp
+    fcp-cpp/src/fcp_log.hpp
+    fcp-cpp/src/fcp_message.cpp
+    fcp-cpp/src/fcp_message.hpp
+    fcp-cpp/src/fcp_signal.cpp
+    fcp-cpp/src/fcp_signal.hpp
+    fcp-cpp/src/json.hpp
+    fcp-cpp/src/signal_parser.c
+    fcp-cpp/src/signal_parser.h
+   )
 
 target_link_libraries(PlotJugglerDataSample
     ${PJ_LIBRARIES})
 
-if (COMPILING_WITH_AMENT)
-    ament_target_dependencies(PlotJugglerStreamSample plotjuggler)
-    ament_target_dependencies(PlotJugglerDataSample plotjuggler)
-endif()
 #------- Install the libraries -------
 
 install(
     TARGETS
-        PlotJugglerStreamSample
         PlotJugglerDataSample
     DESTINATION
         ${PJ_PLUGIN_INSTALL_DIRECTORY}  )
