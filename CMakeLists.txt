@@ -48,6 +48,17 @@ set(PJ_PLUGIN_INSTALL_DIRECTORY bin )
 
 #------- Create the libraries -------
 
+add_library(SelectCanDatabase STATIC
+    kvaser_data_load/select_can_database.h
+    kvaser_data_load/select_can_database.cpp)
+
+
+target_link_libraries(SelectCanDatabase
+    ${PJ_LIBRARIES}
+)
+
+set_property(TARGET SelectCanDatabase PROPERTY POSITION_INDEPENDENT_CODE ON)
+
 # todo: write CMakeLists.txt for fcp-cpp
 add_library(PlotJugglerDataSample SHARED
     kvaser_data_load/kvaser_data_load.h
@@ -76,7 +87,9 @@ add_library(PlotJugglerDataSample SHARED
    )
 
 target_link_libraries(PlotJugglerDataSample
-    ${PJ_LIBRARIES})
+    ${PJ_LIBRARIES}
+    SelectCanDatabase
+)
 
 #------- Install the libraries -------
 

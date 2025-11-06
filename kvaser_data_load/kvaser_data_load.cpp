@@ -10,6 +10,8 @@
 
 #include "fcp-cpp/src/fcp.hpp"
 
+#include "select_can_database.h"
+
 KvaserDataLoad::KvaserDataLoad() : extensions{"kvaser_csv"} {}
 
 const QRegExp csv_separator("(\\,)");
@@ -35,18 +37,29 @@ void KvaserDataLoad::addToPlot(PlotDataMapRef &plot_data, std::string name,
 
 bool KvaserDataLoad::readDataFromFile(FileLoadInfo *info,
                                       PlotDataMapRef &plot_data) {
+
   QFile file(info->filename);
   if (!file.open(QFile::ReadOnly)) {
     return false;
   }
   QTextStream text_stream(&file);
 
+
+  DialogSelectCanDatabase* dialog = new DialogSelectCanDatabase(last_used_database_locations_);
+  if (dialog->exec() != static_cast<int>(QDialog::Accepted)) {
+    delete dialog;
+    return false;
+  }
+
+  last_used_database_locations_ = dialog->GetDatabaseLocations();
+  bool use_enhanced_metadata = dialog->UseEnhancedMetadata();
+
   // The first line ud contain the name of the columns
   QString first_line = text_stream.readLine();
   QStringList column_names = first_line.split(csv_separator);
 
   Fcp fcp{};
-  fcp.decompile_file("/home/joaj/sources/plotjuggler-sample-plugins/fst.json");
+  fcp.decompile_file(last_used_database_locations_[0].toStdString());
 
   //-----------------
   // read the file line by line

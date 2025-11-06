@@ -36,6 +36,7 @@ private:
   std::vector<const char*> extensions;
   std::string _default_time_axis;
   std::unordered_map<std::string, PlotData*> plots_map{};
+  QStringList last_used_database_locations_;
 };
 
 
