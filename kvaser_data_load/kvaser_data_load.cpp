@@ -61,11 +61,24 @@ bool KvaserDataLoad::readDataFromFile(FileLoadInfo *info,
   Fcp fcp{};
   fcp.decompile_file(last_used_database_locations_[0].toStdString());
 
+  QProgressDialog progress_dialog;
+  progress_dialog.setLabelText("Loading... please wait");
+  progress_dialog.setWindowModality(Qt::ApplicationModal);
+  progress_dialog.setRange(0, file.size());
+  progress_dialog.setAutoClose(true);
+  progress_dialog.setAutoReset(true);
+  progress_dialog.show();
+
   //-----------------
   // read the file line by line
   int linecount = 1;
+  uint64_t bytes_read{0};
   while (!text_stream.atEnd()) {
     QString line = text_stream.readLine();
+
+    bytes_read += line.size() + 1;
+    progress_dialog.setValue(bytes_read);
+
     linecount++;
 
     // Split using the comma separator.
@@ -124,6 +137,7 @@ bool KvaserDataLoad::readDataFromFile(FileLoadInfo *info,
     } catch (const std::exception &e) {
       continue;
     }
+
   }
 
   file.close();
